@@ -1,0 +1,11 @@
+create folder => put docker-compose and config
+
+run => docker-compose up -d
+
+docker logs -f odoo-app
+
+docker exec -u odoo odoo-app odoo -d odoo -i base --stop-after-init
+
+docker exec -u root odoo-app bash -c "sed -i '/http_port = 8015/d' /etc/odoo/odoo.conf"
+
+docker restart odoo-app 
