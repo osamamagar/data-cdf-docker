@@ -1,9 +1,10 @@
-version: '3.8'
+version: '3'
 
 services:
+
   db:
     image: postgres:13
-    container_name: odoo-db
+    container_name: odoo-db-smart-EDU
     environment:
       POSTGRES_DB: odoo
       POSTGRES_USER: odoo
@@ -12,25 +13,47 @@ services:
       - odoo-db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+
   odoo:
-    image: osamamagar/cdf_image_to_server:latest
-    container_name: odoo-app
+    image: osamamagar/smart-edu:latest
+    container_name: odoo-app-smart-EDU
     depends_on:
       - db
     ports:
-      - "8069:8069"   # Local port 8015 → Container port 8069 (Odoo)
-      - "8072:8072"   # Longpolling, if you're using it
+      - "8017:8017"
 #    volumes:
-#      - ./addons:/mnt/addons/extra-addons
-#      - ./addons_enterprise:/mnt/addons_enterprise/extra-addons
+#      - ./addons:/mnt/extra-addons
+#      - ./custom_addons:/mnt/extra-addons/custom_addons
 #      - ./config/odoo.conf:/etc/odoo/odoo.conf
+#      - odoo-data:/var/lib/odoo
     environment:
-      - DB_HOST=odoo-db
+      - DB_HOST=odoo-db-smart-EDU
       - DB_PORT=5432
       - DB_USER=odoo
       - DB_PASSWORD=odoo
+
     restart: unless-stopped
 
-volumes:
-  odoo-db-data:
 
+  init:
+    image: docker:latest
+    container_name: odoo-init-smart-EDU
+    depends_on:
+      - odoo
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: >
+      sh -c "
+        echo 'Waiting for Odoo to be ready...';
+        sleep 20;
+        docker exec -u odoo odoo-app-smart-EDU odoo -d odoo -i base --stop-after-init;
+        echo 'Restarting Odoo container...';
+        docker restart odoo-app-smart-EDU;
+        echo 'Initialization complete.';
+      "
+
+    
+
+volumes:
+  odoo-data:  
+  odoo-db-data:  
